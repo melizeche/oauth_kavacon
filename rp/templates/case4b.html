@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Caso 4b — confusión de algoritmo ({{ variant }}){% endblock %}
+{% block body %}
+<h1>Caso 4b — Confusión de algoritmo</h1>
+<p>
+  {% if variant == 'insecure' %}<span class="tag tag-bad">VERIFICACIÓN INSEGURA</span>
+  {% else %}<span class="tag tag-ok">VERIFICACIÓN SEGURA</span>{% endif %}
+  &nbsp;<span class="rfc">{{ meta.rfc }}</span>
+</p>
+<p>El provider firma con <strong>RS256</strong>. La falla es del <strong>cliente</strong>: cómo
+   verifica el <code>id_token</code>.</p>
+
+<div class="card">
+  <h2>Cómo verifica este RP</h2>
+  {% if variant == 'insecure' %}
+  <pre># elige el algoritmo segun el header del token (MAL)
+alg = header["alg"]
+if alg == "RS256": verificar con la clave publica (RSA)
+if alg == "HS256": usar la clave PUBLICA del JWKS como secreto HMAC  # &larr; el bug</pre>
+  <p class="muted">Si el token dice <code>HS256</code>, el RP usa la clave pública (que es
+     <strong>conocida</strong>, está en el JWKS) como secreto HMAC. El atacante firma con esa misma
+     clave pública y pasa la verificación.</p>
+  {% else %}
+  <pre># algorithm fijo, nunca se confia en el header (BIEN)
+jwt.decode(token, clave_publica, algorithms=["RS256"])</pre>
+  <p class="muted">Solo se acepta <code>RS256</code>. Un token <code>HS256</code> se rechaza sin
+     importar lo que diga el header.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>1 · Token legítimo (RS256)</h2>
+  <a class="btn btn-plain" href="{{ legit_url }}">Verificar un token legítimo del OP</a>
+  <p class="muted">Pasa en ambas variantes: la verificación insegura no está "rota" para el uso
+     normal, solo es explotable.</p>
+</div>
+
+<div class="card">
+  <h2>2 · Token falsificado <span class="muted">(en inglés, <em>forged</em>)</span> por el atacante (HS256)</h2>
+  <a class="btn btn-bad" href="{{ forge_url }}" target="_blank">Abrir el falsificador del atacante &rarr;</a>
+  {% if variant == 'insecure' %}
+  <p class="muted">El atacante falsifica un <code>id_token</code> con privilegios de admin, firmado
+     <code>HS256</code> con la clave pública. Esta verificación insegura lo <strong>acepta</strong>
+     → escalada.</p>
+  {% else %}
+  <p class="muted">La verificación segura <strong>rechaza</strong> el token falsificado:
+     <code>alg</code> no permitido.</p>
+  {% endif %}
+</div>
+{% endblock %}

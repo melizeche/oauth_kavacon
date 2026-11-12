@@ -1,0 +1,67 @@
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+#
+# Certificado de firma del laboratorio.
+#
+# Se incluye una clave privada en el repo A PROPOSITO: este es un lab aislado y
+# deliberadamente inseguro. NUNCA incluyas una clave privada en un repositorio
+# de un entorno real. Sirve para que los providers firmen id_tokens con RS256
+# (verificable via JWKS) de forma reproducible, sin depender del certificado
+# autogenerado del IdP.
+version: 1
+metadata:
+  name: lab-00-signing-cert
+entries:
+  - model: authentik_crypto.certificatekeypair
+    id: lab-signing-cert
+    identifiers:
+      name: lab-signing-cert
+    attrs:
+      name: lab-signing-cert
+      certificate_data: |
+        -----BEGIN CERTIFICATE-----
+        MIIC/DCCAeSgAwIBAgIUb886RvcF49zm2qz3B0Yhm8YvdYQwDQYJKoZIhvcNAQEL
+        BQAwHjEcMBoGA1UEAwwTa2F2YWNvbi1sYWItc2lnbmluZzAeFw0yNjExMTIwNTAy
+        MzRaFw0zNjExMDkwNTAyMzRaMB4xHDAaBgNVBAMME2thdmFjb24tbGFiLXNpZ25p
+        bmcwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCbnqUhlagB3uCrfROk
+        IlMiJMgm2miDDxRSVctUA66Mi1aykhKjovPHHhokO+kW7tV6DY0uQfheP1Nmppcn
+        uIW52VV7G4kwqX35tOy3I26frxR7utjJA9pEEWsj2NWRPPm0djw8xGCt23NZoc8G
+        ehji1CXSp0DtWd9IYb1aeau5F96WfBgFGy+rz1vy83NZewWjpfq0e2hBCNGZ/F0l
+        QxPIohlWL3AJ9q1A4CRHNFYJ97KcJSmk1RNYd4zHw33Wlt83He4ANCwkXaiDLCrk
+        M9FRf2DS+cnD6gU0l75WHGhMDaJ8KaNKl1WEnm6aRPSpuHiYtguLllw3HlfrtELb
+        uRSTAgMBAAGjMjAwMB0GA1UdDgQWBBTMSYUxkiGeYwBTNSbaAXw99bThejAPBgNV
+        HRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBCwUAA4IBAQAdaxg+02CQ00oTjIdzh2jE
+        2ZF84zMMLzKQEL8k5gpveaQSzBaFenh/MASpvEf5pp3hBl9T8e/E5sjn5LVJEVwo
+        uk6tFQ/Z01c1yE7zMB1F0NmJ2vgv1S+BvTjnyh48irqxWUGTP/hJ4E+rj7J4lZYz
+        Qor3jfzpuSk1/1pkUHH6uvWVR853jPcWaBd38ji7knEdTCv6dy0GyxMdni0j9rOf
+        C5KvKDgIdGKGuQ9K155fmkRGhoTdaSrI5DH8t/ynpLA8M+ijKgKtYVhnSRQk5cyD
+        DPky+QvmF5HWbgeWtk6BRPmm6bSoVG6Ouz0SgeEbP4mpCaYBSeKxY0QdAZ4X9ga8
+        -----END CERTIFICATE-----
+      key_data: |
+        -----BEGIN PRIVATE KEY-----
+        MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCbnqUhlagB3uCr
+        fROkIlMiJMgm2miDDxRSVctUA66Mi1aykhKjovPHHhokO+kW7tV6DY0uQfheP1Nm
+        ppcnuIW52VV7G4kwqX35tOy3I26frxR7utjJA9pEEWsj2NWRPPm0djw8xGCt23NZ
+        oc8Gehji1CXSp0DtWd9IYb1aeau5F96WfBgFGy+rz1vy83NZewWjpfq0e2hBCNGZ
+        /F0lQxPIohlWL3AJ9q1A4CRHNFYJ97KcJSmk1RNYd4zHw33Wlt83He4ANCwkXaiD
+        LCrkM9FRf2DS+cnD6gU0l75WHGhMDaJ8KaNKl1WEnm6aRPSpuHiYtguLllw3Hlfr
+        tELbuRSTAgMBAAECggEASUVcCMEXFrJi5DuC6PAEZnodBzYkqTiLX+znTEpjf+cH
+        ThK61fMehq0kr9TJfbO8Lbh9tb73+yAj25wqZVhbFlM/DTS81n2nQ9As+Fmld2gO
+        4+botVSsCwqMgJdSjwy/oXleCVqJDrLZz+UAvdL1Lq+mk1WOm3KKT+E9L4FEGmRn
+        nbXaacGOkuEaBKRINfh+6E0H0yxS2ixJr2WNnM0CqE0U4bUAVKl4LIkK9yLwrZtx
+        dcKFClogxNsO0fuFymqLbih+1I4Om3WAsuHDY1o/UQjH6DVAHJwAKLm+iyjjNABJ
+        V6iuYj9QSp7h1Iofi7r2b6W5JZYZRFgnac6g0UsJyQKBgQDPqzhCbSeXAIMu46Wm
+        VUjoSRrEfPVeNIOTaZX/LeLu1+GBpnvBj1TZLmigWV77aLLxvA2HaqyDMuLZCdEE
+        vrOKcEqC6ntGez5TBCLPM8VBaZvTpdjmesZYERgHX3vCF7+4tF5pB5fB5S46citB
+        p6QsWdOa++1g+6BUosRJXwTV3QKBgQC/1l70PDPfpiGzGxUL/eSaX3KLtXxQ1EDq
+        XZJJq6h1q2OKEMUcodve9PaaTYHteHU4VSU9yNZg6niOKuRL5TgyFXepMve/sTw8
+        sf9CYEi1bYRie8KDrg4XV6JERpFDy0sn7cH38P/4bH9S/7j2mX3RSfV046iPOh6u
+        gUcH9wKFLwKBgBoerAXW2troSpe0NFqWcYQd5cr++JGvwzjgV+hvqhJmfsui2AAB
+        eieS6b/5XbP7eD5la8IzjZ024kdwL6UMI2LvOr/6pCS6TZ19cK9lEJNoqBvXyU87
+        9ASRqdcLkHJaMFgX/6PwO4s8uzLIt14bqs+VQMNGmpXPMFxU2KFt3RrVAoGBAKHI
+        AroMT17sNv1Z+IztaC28Eti5jAaKidhcYzNX3bCmgkJ8VA8KfWdwxMtqVAlVjd2d
+        CNQrHIgNFPAoQfGzdIngStLZVdBGgttY7UEn/AltO7jmUCtGzUFoOUNFE9rNhis9
+        OliD2QrDTTlMycrFtTKcIbGbEJsBU8Cs659O88QnAoGAOhh1WUXmlDVGOx4Ou1P1
+        1W6Ufc9feEkfsBTat8bMUTtjQwTcy980SnSPoFubRPsG5BRVTL5G+XyerFdeDre6
+        01yV0N2xPu+zv4Wfjav6dgY6BbfpT650Q65Raew40Ry0cCYcyv3CrmXhDPzKUKJ8
+        1M1JiTc1iwbNyi4M5nlGaIs=
+        -----END PRIVATE KEY-----

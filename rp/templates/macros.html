@@ -1,0 +1,50 @@
+{# Decodificador de JWT reusable: header / payload / firma, estilo jwt.io. #}
+{% macro jwt_view(title, header, payload, verdict=None, ok=None, raw=None, highlight=[]) %}
+<style>
+  .jwt { border: 1px solid #8884; border-radius: 12px; padding: 1rem 1.2rem; margin: 1rem 0; }
+  .jwt h3 { margin: .1rem 0 .7rem; font-size: 1rem; }
+  .jwt .seg { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .95rem;
+              margin: .5rem 0; }
+  .jwt .seg-title { font-size: .75rem; text-transform: uppercase; letter-spacing: 1px;
+                    color: #6b7280; margin-bottom: .2rem; }
+  .jwt .kv { display: grid; grid-template-columns: max-content 1fr; gap: .25rem .9rem; }
+  .jwt .k { color: #0891b2; font-weight: 700; text-align: right; white-space: nowrap; }
+  .jwt .v { color: #b45309; font-weight: 600; word-break: break-all; }
+  @media (prefers-color-scheme: dark) { .jwt .k { color: #38bdf8; } .jwt .v { color: #fbbf24; } }
+  .jwt .alg { background: #f59e0b22; outline: 2px solid #f59e0b; border-radius: 5px; padding: 0 .25em; }
+  .jwt .box-h { background: #c0392b11; } .jwt .box-p { background: #2980b911; }
+  .jwt .seg .box { padding: .6rem .8rem; border-radius: 8px; }
+  .chip { display: inline-block; padding: .25rem .7rem; border-radius: 999px; font-weight: 800;
+          font-size: .85rem; }
+  .chip.ok { background: #16a34a22; color: #16a34a; border: 1px solid #16a34a; }
+  .chip.bad { background: #dc262622; color: #dc2626; border: 1px solid #dc2626; }
+  .jwt .raw { font-size: .72rem; color: #9ca3af; word-break: break-all; margin-top: .6rem; }
+</style>
+<div class="jwt">
+  <h3>{{ title }}
+    {% if verdict is not none %}
+      <span class="chip {{ 'ok' if ok else 'bad' }}">{{ verdict }}</span>
+    {% endif %}
+  </h3>
+
+  <div class="seg">
+    <div class="seg-title">header</div>
+    <div class="box box-h kv">
+      {% for k, v in header.items() %}
+        <span class="k">{{ k }}</span><span class="v {{ 'alg' if k == 'alg' }}">{{ v }}</span>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="seg">
+    <div class="seg-title">payload</div>
+    <div class="box box-p kv">
+      {% for k, v in payload.items() %}
+        <span class="k {{ 'alg' if k in highlight }}">{{ k }}</span><span class="v {{ 'alg' if k in highlight }}">{{ v }}</span>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if raw %}<div class="raw">{{ raw }}</div>{% endif %}
+</div>
+{% endmacro %}

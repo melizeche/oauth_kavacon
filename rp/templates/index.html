@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Lab OAuth/OIDC — Índice{% endblock %}
+{% block body %}
+<h1>Laboratorio OAuth 2.0 / OpenID Connect</h1>
+<p class="muted">Entorno <strong>aislado</strong> y <strong>deliberadamente mal configurado</strong>,
+con fines educativos. Los defaults de un IdP moderno son razonablemente seguros: todo esto
+requiere desviarse de ellos. Es independiente del producto.</p>
+
+{% for c in cases %}
+<div class="card">
+  <h2>{{ c.title }}</h2>
+  <p class="rfc">{{ c.rfc }}</p>
+  {% for l in c.links %}
+    {% if l.kind == 'bad' %}<a class="btn btn-bad" href="{{ l.url }}">{{ l.label }}</a>
+    {% elif l.kind == 'ok' %}<a class="btn btn-ok" href="{{ l.url }}">{{ l.label }}</a>
+    {% else %}<a class="btn btn-plain" href="{{ l.url }}">{{ l.label }}</a>{% endif %}
+  {% endfor %}
+</div>
+{% endfor %}
+{% endblock %}

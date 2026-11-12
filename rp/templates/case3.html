@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}{{ meta.title }} — {{ variant }}{% endblock %}
+{% block body %}
+<style>
+  .prot { display: flex; gap: .5rem; flex-wrap: wrap; margin: 1rem 0; }
+  .p { font-family: ui-monospace, Menlo, monospace; font-weight: 700; padding: .35rem .75rem;
+       border-radius: 999px; border: 1px solid #8886; }
+  .p.off { color: #dc2626; border-color: #dc2626; background: #dc262618;
+           animation: pulse 1.1s ease-in-out infinite; }
+  .p.on { color: #16a34a; border-color: #16a34a; background: #16a34a18; }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 #dc262688; } 50% { box-shadow: 0 0 0 7px #dc262600; } }
+</style>
+
+<h1>{{ meta.title }}</h1>
+<p>
+  {% if variant == 'insecure' %}<span class="tag tag-bad">VARIANTE INSEGURA</span>
+  {% else %}<span class="tag tag-ok">VARIANTE SEGURA</span>{% endif %}
+  &nbsp;<span class="rfc">{{ meta.rfc }}</span>
+</p>
+<p>El OP está <strong>bien configurado</strong> en ambas variantes (code flow, redirect estricto,
+RS256). La diferencia está en el <strong>cliente</strong>: ningún IdP genera <code>state</code>,
+<code>nonce</code> ni PKCE por vos.</p>
+
+<div class="prot">
+  {% if variant == 'insecure' %}
+    <span class="p off">state: NO</span>
+    <span class="p off">nonce: NO</span>
+    <span class="p off">PKCE: NO</span>
+  {% else %}
+    <span class="p on">state ✓</span>
+    <span class="p on">nonce ✓</span>
+    <span class="p on">PKCE S256 ✓</span>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>Login legítimo</h2>
+  <a class="btn {{ 'btn-bad' if variant=='insecure' else 'btn-plain' }}" href="{{ login_url }}">
+    Login como la víctima</a>
+  <p class="muted">Usuario <code>victima</code> / <code>Kavacon2026!</code></p>
+</div>
+
+<div class="card">
+  <h2>Ataque: login-CSRF</h2>
+  {% if variant == 'insecure' %}
+  <p>El atacante consigue un <code>code</code> para <strong>su propia</strong> cuenta y te lo
+     inyecta. Sin <code>state</code>, el RP canjea ese code y tu sesión del RP queda logueada
+     <strong>como el atacante</strong>. Todo lo que hagas después cae en la cuenta de él.</p>
+  <a class="btn btn-bad" href="{{ attacker_csrf_url }}" target="_blank">Abrir la trampa del atacante &rarr;</a>
+  <p class="muted">La trampa prepara un code del atacante y un botón "Continuar" (hacés de víctima).
+     Terminás en una sesión del RP que no es la tuya.</p>
+  {% else %}
+  <p>Con <code>state</code>, el callback exige que la respuesta corresponda a un login que
+     <em>vos</em> iniciaste. El code inyectado del atacante no trae tu <code>state</code> → se
+     rechaza. PKCE además liga el code a tu <code>code_verifier</code>, y el <code>nonce</code>
+     corta el replay del <code>id_token</code>.</p>
+  <a class="btn btn-ok" href="{{ attacker_csrf_url }}?variant=secure" target="_blank">Probar la trampa del atacante &rarr;</a>
+  <p class="muted">En esta variante la trampa termina en un error de <code>state</code>: el ataque falla.</p>
+  {% endif %}
+</div>
+{% endblock %}

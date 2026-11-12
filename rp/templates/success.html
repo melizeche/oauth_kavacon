@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Login OK — {{ case }}/{{ variant }}{% endblock %}
+{% block body %}
+<style>
+  .kv { display: grid; grid-template-columns: max-content 1fr; gap: .35rem 1.1rem;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 1rem;
+        background: #11182711; border: 1px solid #8884; border-radius: 10px; padding: .9rem 1.1rem; }
+  .kv .k { color: #0891b2; font-weight: 700; text-align: right; white-space: nowrap; }
+  .kv .v { color: #b45309; font-weight: 600; word-break: break-all; }
+  @media (prefers-color-scheme: dark) {
+    .kv { background: #0b1220; }
+    .kv .k { color: #38bdf8; }
+    .kv .v { color: #fbbf24; }
+  }
+  @media (max-width: 560px) { .kv { grid-template-columns: 1fr; gap: .1rem .5rem; }
+                              .kv .k { text-align: left; } }
+</style>
+
+<h1>Callback del RP — {{ case }}/{{ variant }}</h1>
+
+{% if verify_error %}
+  <div class="card"><p class="tag tag-bad">VERIFICACIÓN FALLIDA</p><pre>{{ verify_error }}</pre></div>
+{% endif %}
+
+{% if claims %}
+  <div class="card">
+    <p class="tag tag-ok">id_token verificado (RS256 vía JWKS)</p>
+    <h2>Claims del id_token</h2>
+    <div class="kv">
+      {% for k, v in claims.items() %}
+        <span class="k">{{ k }}</span><span class="v">{{ v }}</span>
+      {% endfor %}
+    </div>
+  </div>
+{% endif %}
+
+<div class="card">
+  <h2>Respuesta del token endpoint</h2>
+  <div class="kv">
+    {% for k, v in tokens.items() %}
+      <span class="k">{{ k }}</span><span class="v">{{ v }}</span>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+{% block title %}Panel corporativo — caso6/{{ variant }}{% endblock %}
+{% block body %}
+<style>
+  .warn { border-left: 4px solid #dc2626; background: #dc262610; padding: .8rem 1.1rem;
+          border-radius: 8px; margin: 1rem 0; font-size: 1.05rem; }
+  .good { border-left: 4px solid #16a34a; background: #16a34a10; padding: .8rem 1.1rem;
+          border-radius: 8px; margin: 1rem 0; }
+</style>
+<h1>Panel corporativo — {{ variant }}</h1>
+<p class="muted">Fuente: {{ source }}</p>
+
+{{ m.jwt_view("id_token", header, payload, verdict=verdict, ok=ok, raw=raw, highlight=["iss"]) }}
+
+{% if ok %}
+  {% if from_evil %}
+    <div class="warn">
+      ⚠ El RP dio acceso al <strong>panel corporativo</strong> a un id_token emitido por
+      <strong>OP-Evil</strong> (<code>{{ payload.get('iss') }}</code>), identidad
+      <strong>{{ payload.get('email') }}</strong>. La firma y el <code>aud</code> eran válidos, pero
+      el token vino del OP equivocado. Sin validar <code>iss</code>, el RP no lo distingue.
+    </div>
+  {% else %}
+    <div class="good">Acceso al panel como <strong>{{ payload.get('email') }}</strong>
+      (iss = OP-Corp).</div>
+  {% endif %}
+{% else %}
+  <div class="good">Acceso <strong>denegado</strong>. {{ verdict }}</div>
+{% endif %}
+
+<p><a class="btn btn-plain" href="/caso6/{{ variant }}">&larr; volver</a></p>
+{% endblock %}

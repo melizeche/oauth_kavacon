@@ -1,0 +1,117 @@
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+#
+# CASO 4 — Firma del token y confusion de algoritmo.
+#
+#   4a  caso4a-hs256 : SIN signing_key  -> el OP firma el id_token con HS256
+#                      usando el client_secret (clave simetrica compartida).
+#       caso4a-rs256 : CON signing_key  -> RS256, verificable por JWKS (clave
+#                      publica). Solo el OP puede firmar.
+#   4b  caso4b        : RS256 + JWKS. La falla real es del CLIENTE: verificar
+#                      eligiendo el algoritmo segun el header del token.
+#
+# RFC 7515 / 7519 (JWS/JWT) · RFC 8725 (JWT BCP).
+version: 1
+metadata:
+  name: lab-caso4-signature
+entries:
+  # --- 4a: firma simetrica (HS256, sin signing_key) --------------------------
+  - model: authentik_providers_oauth2.oauth2provider
+    id: caso4a-hs256-provider
+    identifiers:
+      name: caso4a-hs256
+    attrs:
+      name: caso4a-hs256
+      client_id: caso4a-hs256
+      client_secret: caso4a-hs256-secret-no-usar-en-prod
+      client_type: confidential
+      grant_types:
+        - authorization_code
+        - refresh_token
+      redirect_uris:
+        - url: 'http://localhost:8081/caso4a/callback'
+          matching_mode: strict
+      sub_mode: hashed_user_id
+      include_claims_in_id_token: true
+      # SIN signing_key: el id_token se firma HS256 con el client_secret.
+      authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
+      invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+      property_mappings:
+        - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-openid]]
+        - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-email]]
+        - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-profile]]
+  - model: authentik_core.application
+    id: caso4a-hs256-app
+    identifiers:
+      slug: caso4a-hs256
+    attrs:
+      name: 'Caso 4a — firma simetrica HS256'
+      slug: caso4a-hs256
+      provider: !KeyOf caso4a-hs256-provider
+
+  # --- 4a: firma asimetrica (RS256 + JWKS) -----------------------------------
+  - model: authentik_providers_oauth2.oauth2provider
+    id: caso4a-rs256-provider
+    identifiers:
+      name: caso4a-rs256
+    attrs:
+      name: caso4a-rs256
+      client_id: caso4a-rs256
+      client_secret: caso4a-rs256-secret-no-usar-en-prod
+      client_type: confidential
+      grant_types:
+        - authorization_code
+        - refresh_token
+      redirect_uris:
+        - url: 'http://localhost:8081/caso4a/callback'
+          matching_mode: strict
+      sub_mode: hashed_user_id
+      include_claims_in_id_token: true
+      signing_key: !Find [authentik_crypto.certificatekeypair, [name, lab-signing-cert]]
+      authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
+      invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+      property_mappings:
+        - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-openid]]
+        - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-email]]
+        - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-profile]]
+  - model: authentik_core.application
+    id: caso4a-rs256-app
+    identifiers:
+      slug: caso4a-rs256
+    attrs:
+      name: 'Caso 4a — firma asimetrica RS256'
+      slug: caso4a-rs256
+      provider: !KeyOf caso4a-rs256-provider
+
+  # --- 4b: provider RS256 para la confusion de algoritmo ---------------------
+  - model: authentik_providers_oauth2.oauth2provider
+    id: caso4b-provider
+    identifiers:
+      name: caso4b
+    attrs:
+      name: caso4b
+      client_id: caso4b
+      client_secret: caso4b-secret-no-usar-en-prod
+      client_type: confidential
+      grant_types:
+        - authorization_code
+        - refresh_token
+      redirect_uris:
+        - url: 'http://localhost:8081/caso4b/callback'
+          matching_mode: strict
+      sub_mode: hashed_user_id
+      include_claims_in_id_token: true
+      signing_key: !Find [authentik_crypto.certificatekeypair, [name, lab-signing-cert]]
+      authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
+      invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+      property_mappings:
+        - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-openid]]
+        - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-email]]
+        - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-profile]]
+  - model: authentik_core.application
+    id: caso4b-app
+    identifiers:
+      slug: caso4b
+    attrs:
+      name: 'Caso 4b — confusion de algoritmo'
+      slug: caso4b
+      provider: !KeyOf caso4b-provider

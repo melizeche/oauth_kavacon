@@ -1,0 +1,122 @@
+# =============================================================================
+#  Laboratorio OAuth 2.0 / OIDC — Kavacon 2026
+#  Entorno AISLADO y DELIBERADAMENTE MAL CONFIGURADO, con fines educativos.
+#  NO es una instalacion normal de un IdP. Ver README.md.
+# =============================================================================
+
+x-authentik-env: &authentik-env
+  AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY:?set AUTHENTIK_SECRET_KEY in .env}
+  AUTHENTIK_POSTGRESQL__HOST: postgresql
+  AUTHENTIK_POSTGRESQL__USER: ${POSTGRES_USER:-authentik}
+  AUTHENTIK_POSTGRESQL__NAME: ${POSTGRES_DB:-authentik}
+  AUTHENTIK_POSTGRESQL__PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+  AUTHENTIK_DISABLE_UPDATE_CHECK: "true"
+  AUTHENTIK_ERROR_REPORTING__ENABLED: "false"
+  AUTHENTIK_DISABLE_STARTUP_ANALYTICS: "true"
+  # Bootstrap del admin (solo tiene efecto en el primer arranque).
+  AUTHENTIK_BOOTSTRAP_PASSWORD: ${AUTHENTIK_BOOTSTRAP_PASSWORD:-akadmin-lab}
+  AUTHENTIK_BOOTSTRAP_TOKEN: ${AUTHENTIK_BOOTSTRAP_TOKEN:-lab-bootstrap-token}
+  AUTHENTIK_BOOTSTRAP_EMAIL: ${AUTHENTIK_BOOTSTRAP_EMAIL:-admin@lab.local}
+
+services:
+  postgresql:
+    image: docker.io/library/postgres:16-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      start_period: 20s
+      interval: 10s
+      retries: 10
+      timeout: 5s
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-authentik}
+      POSTGRES_DB: ${POSTGRES_DB:-authentik}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    networks:
+      - lab
+
+  server:
+    image: ghcr.io/goauthentik/server:2026.8.5
+    restart: unless-stopped
+    command: server
+    environment:
+      <<: *authentik-env
+    healthcheck:
+      test: ["CMD", "ak", "healthcheck"]
+      start_period: 60s
+      interval: 30s
+      retries: 10
+      timeout: 30s
+    volumes:
+      - ./cases:/blueprints/lab:ro
+      - ./data/media:/media
+    ports:
+      - "9000:9000"
+      - "9443:9443"
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    networks:
+      - lab
+
+  worker:
+    image: ghcr.io/goauthentik/server:2026.8.5
+    restart: unless-stopped
+    command: worker
+    environment:
+      <<: *authentik-env
+    healthcheck:
+      test: ["CMD", "ak", "healthcheck"]
+      start_period: 60s
+      interval: 30s
+      retries: 10
+      timeout: 30s
+    volumes:
+      - ./cases:/blueprints/lab:ro
+      - ./data/media:/media
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    networks:
+      - lab
+
+  rp:
+    build: ./rp
+    restart: unless-stopped
+    environment:
+      # URL que sigue el NAVEGADOR (publicada en el host).
+      OP_BROWSER_URL: http://localhost:9000
+      # URL que usa el RP server-to-server (token, jwks, discovery). En Docker
+      # Desktop (mac/Win) host.docker.internal apunta al host; en Linux se
+      # resuelve via extra_hosts mas abajo.
+      OP_INTERNAL_URL: http://host.docker.internal:9000
+      RP_BASE_URL: http://localhost:8081
+      FLASK_SECRET_KEY: rp-lab-session-key
+    ports:
+      - "8081:8081"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      server:
+        condition: service_healthy
+    networks:
+      - lab
+
+  attacker:
+    build: ./attacker
+    restart: unless-stopped
+    environment:
+      OP_INTERNAL_URL: http://host.docker.internal:9000
+      RP_BROWSER_URL: http://localhost:8081
+    ports:
+      - "8082:8082"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - lab
+
+networks:
+  lab:
+    driver: bridge

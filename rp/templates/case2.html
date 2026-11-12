@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}{{ meta.title }} — {{ variant }}{% endblock %}
+{% block body %}
+<style>
+  .cfg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+  @media (max-width: 680px) { .cfg-grid { grid-template-columns: 1fr; } }
+  .cfg { border: 2px solid #8884; border-radius: 12px; padding: .9rem 1.1rem; opacity: .55; }
+  .cfg.active { opacity: 1; }
+  .cfg.insecure.active { border-color: #dc2626; box-shadow: 0 0 22px #dc262633; }
+  .cfg.secure.active   { border-color: #16a34a; box-shadow: 0 0 22px #16a34a33; }
+  .cfg h3 { margin: .1rem 0 .5rem; font-size: .95rem; }
+  .cfg .mode { font-size: .8rem; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; }
+  .cfg .note { font-size: .85rem; color: #9ca3af; margin: .6rem 0 0; }
+  .grants { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 1rem; }
+  .g { display: inline-block; padding: .15rem .55rem; margin: .15rem .2rem 0 0; border-radius: 999px;
+       border: 1px solid #8886; }
+  .g.bad { color: #dc2626; border-color: #dc2626; background: #dc262618; font-weight: 700;
+           animation: pulse 1.1s ease-in-out infinite; }
+  .g.ok { color: #16a34a; border-color: #16a34a; background: #16a34a18; }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 #dc262688; } 50% { box-shadow: 0 0 0 7px #dc262600; } }
+  .rt { font-family: ui-monospace, Menlo, monospace; font-weight: 700; }
+</style>
+
+<h1>{{ meta.title }}</h1>
+<p>
+  {% if variant == 'insecure' %}
+    <span class="tag tag-bad">VARIANTE INSEGURA</span>
+  {% else %}
+    <span class="tag tag-ok">VARIANTE SEGURA</span>
+  {% endif %}
+  &nbsp;<span class="rfc">{{ meta.rfc }}</span>
+</p>
+
+<h2>Los <code>grant_types</code> del provider</h2>
+<div class="cfg-grid">
+  <div class="cfg insecure {{ 'active' if variant == 'insecure' }}">
+    <h3>🔴 caso2-insecure</h3>
+    <div class="grants">
+      <span class="g">authorization_code</span><span class="g bad">implicit</span><span class="g bad">hybrid</span><span class="g">refresh_token</span>
+    </div>
+    <p class="note">Con <span class="g bad" style="animation:none">implicit</span> habilitado, el RP puede pedir
+      <span class="rt">response_type=id&#95;token token</span> y el token vuelve en el
+      <strong>#fragment</strong> de la URL — a la vista de cualquier script en la página.</p>
+  </div>
+  <div class="cfg secure {{ 'active' if variant == 'secure' }}">
+    <h3>🟢 caso2-secure</h3>
+    <div class="grants">
+      <span class="g ok">authorization_code</span><span class="g ok">refresh_token</span>
+    </div>
+    <p class="note">Solo code flow. <span class="rt">response_type=code</span>: el token se canjea
+      servidor-a-servidor y <strong>nunca</strong> aparece en la URL.</p>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Login</h2>
+  {% if variant == 'insecure' %}
+    <p>Flujo <strong>implicit</strong>: <span class="rt">response_type = {{ response_type }}</span>,
+      redirect a <code>{{ redirect_uri }}</code>.</p>
+    <a class="btn btn-bad" href="{{ login_url }}">Login como la víctima (implicit)</a>
+    <p class="muted">Tras el login, mirá la <strong>URL</strong>: el token queda en el <code>#fragment</code>.
+      La página de callback carga un "widget" de tercero (<code>{{ attacker_url }}/steal.js</code>) que lo
+      roba. Mirá la captura en vivo en
+      <a href="{{ attacker_url }}/" target="_blank">{{ attacker_url }}/</a>.</p>
+  {% else %}
+    <p>Flujo <strong>authorization code</strong>: <span class="rt">response_type = {{ response_type }}</span>,
+      redirect a <code>{{ redirect_uri }}</code>.</p>
+    <a class="btn btn-plain" href="{{ login_url }}">Login como la víctima (code)</a>
+    <p class="muted">El token se canjea server-to-server. No hay nada en el <code>#fragment</code>:
+      el widget del atacante no captura nada.</p>
+  {% endif %}
+  <p class="muted">Usuario <code>victima</code> / <code>Kavacon2026!</code></p>
+</div>
+{% endblock %}

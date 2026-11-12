@@ -1,0 +1,6 @@
+# Secretos y datos de runtime
+.env
+data/
+*.pyc
+__pycache__/
+.DS_Store

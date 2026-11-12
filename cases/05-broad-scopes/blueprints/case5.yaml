@@ -1,0 +1,101 @@
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+#
+# CASO 5 — Scopes amplios / request sin scope (configuracion del OP).
+#
+#   caso5-insecure : tiene configurado un scope sensible (datos de RRHH que salen
+#                    de los atributos del grupo de la victima). Si el RP pide SIN
+#                    el parametro scope, el OP aplica TODOS los configurados y el
+#                    token sale con los datos sensibles.
+#   caso5-secure   : solo scopes minimos (openid, email). No hay nada sensible
+#                    configurado para filtrar, y el RP pide lo justo.
+#
+# RFC 6749 §3.3 (scope).
+version: 1
+metadata:
+  name: lab-caso5-broad-scopes
+entries:
+  # Scope mapping sensible: expone atributos del grupo como claims.
+  - model: authentik_providers_oauth2.scopemapping
+    id: caso5-hr-scope
+    identifiers:
+      name: caso5-hr-data
+    attrs:
+      name: caso5-hr-data
+      scope_name: hr_data
+      description: 'Datos de RRHH (sensibles, solo lab)'
+      expression: |
+        attrs = user.group_attributes()
+        return {
+            "department": attrs.get("department"),
+            "clearance": attrs.get("clearance"),
+            "salary_band": attrs.get("salary_band"),
+            "employee_id": attrs.get("employee_id"),
+        }
+
+  # INSEGURO: provider con el scope sensible configurado.
+  - model: authentik_providers_oauth2.oauth2provider
+    id: caso5-insecure-provider
+    identifiers:
+      name: caso5-insecure
+    attrs:
+      name: caso5-insecure
+      client_id: caso5-insecure
+      client_secret: caso5-insecure-secret-no-usar-en-prod
+      client_type: confidential
+      grant_types:
+        - authorization_code
+        - refresh_token
+      redirect_uris:
+        - url: 'http://localhost:8081/caso5/callback'
+          matching_mode: strict
+      sub_mode: hashed_user_id
+      include_claims_in_id_token: true
+      signing_key: !Find [authentik_crypto.certificatekeypair, [name, lab-signing-cert]]
+      authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
+      invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+      property_mappings:
+        - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-openid]]
+        - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-email]]
+        - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-profile]]
+        - !KeyOf caso5-hr-scope
+  - model: authentik_core.application
+    id: caso5-insecure-app
+    identifiers:
+      slug: caso5-insecure
+    attrs:
+      name: 'Caso 5 — scopes amplios (INSEGURO)'
+      slug: caso5-insecure
+      provider: !KeyOf caso5-insecure-provider
+
+  # SEGURO: solo scopes minimos; nada sensible configurado.
+  - model: authentik_providers_oauth2.oauth2provider
+    id: caso5-secure-provider
+    identifiers:
+      name: caso5-secure
+    attrs:
+      name: caso5-secure
+      client_id: caso5-secure
+      client_secret: caso5-secure-secret-no-usar-en-prod
+      client_type: confidential
+      grant_types:
+        - authorization_code
+        - refresh_token
+      redirect_uris:
+        - url: 'http://localhost:8081/caso5/callback'
+          matching_mode: strict
+      sub_mode: hashed_user_id
+      include_claims_in_id_token: true
+      signing_key: !Find [authentik_crypto.certificatekeypair, [name, lab-signing-cert]]
+      authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
+      invalidation_flow: !Find [authentik_flows.flow, [slug, default-provider-invalidation-flow]]
+      property_mappings:
+        - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-openid]]
+        - !Find [authentik_providers_oauth2.scopemapping, [managed, goauthentik.io/providers/oauth2/scope-email]]
+  - model: authentik_core.application
+    id: caso5-secure-app
+    identifiers:
+      slug: caso5-secure
+    attrs:
+      name: 'Caso 5 — scopes minimos (SEGURO)'
+      slug: caso5-secure
+      provider: !KeyOf caso5-secure-provider

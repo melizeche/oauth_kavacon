@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=https://goauthentik.io/blueprints/schema.json
+#
+# Usuario victima + grupo con atributos sensibles (el grupo se usa en el Caso 5).
+# La contrasena se fija con el campo `password` del blueprint. NO setear a la vez
+# `password` y `password_hash`.
+version: 1
+metadata:
+  name: lab-01-victim-user
+entries:
+  - model: authentik_core.group
+    id: group-empleados
+    identifiers:
+      name: empleados-lab
+    attrs:
+      name: empleados-lab
+      attributes:
+        department: Finanzas
+        clearance: confidential
+        employee_id: EMP-00042
+        salary_band: L5
+
+  - model: authentik_core.user
+    id: user-victima
+    identifiers:
+      username: victima
+    attrs:
+      username: victima
+      name: Victima Demo
+      email: victima@lab.local
+      is_active: true
+      path: users
+      password: Kavacon2026!
+      groups:
+        - !KeyOf group-empleados

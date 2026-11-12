@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Caso 6 — mix-up / issuer ({{ variant }}){% endblock %}
+{% block body %}
+<h1>Caso 6 — Mix-up: validar el issuer</h1>
+<p>
+  {% if variant == 'insecure' %}<span class="tag tag-bad">NO VALIDA iss</span>
+  {% else %}<span class="tag tag-ok">VALIDA iss</span>{% endif %}
+  &nbsp;<span class="rfc">{{ meta.rfc }}</span>
+</p>
+<p>Este es un <strong>panel corporativo</strong> que solo debería confiar en
+   <strong>OP-Corp</strong>. El RP está federado con dos OPs (OP-Corp y OP-Evil) que firman con la
+   <strong>misma clave</strong>, así que la firma es válida para ambos. Lo único que distingue de
+   quién vino el token es el claim <code>iss</code>.</p>
+<p class="muted">OP-Corp esperado: <code>{{ corp_issuer }}</code></p>
+
+<div class="card">
+  <h2>Cómo verifica este RP</h2>
+  {% if variant == 'insecure' %}
+  <pre>jwt.decode(token, clave, algorithms=["RS256"],
+  audience=["caso6-corp","caso6-evil"])   # NO valida iss</pre>
+  <p class="muted">Acepta cualquier token bien firmado con un <code>aud</code> conocido, sin mirar
+     de qué OP vino. Un token de OP-Evil pasa.</p>
+  {% else %}
+  <pre>jwt.decode(token, clave, algorithms=["RS256"],
+  audience=["caso6-corp","caso6-evil"],
+  issuer="{{ corp_issuer }}")             # exige OP-Corp</pre>
+  <p class="muted">Un token cuyo <code>iss</code> no sea OP-Corp se rechaza.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>1 · Login corporativo legítimo (OP-Corp)</h2>
+  <a class="btn btn-plain" href="{{ legit_url }}">Entrar con OP-Corp</a>
+  <p class="muted">Pasa en ambas variantes: <code>iss</code> = OP-Corp.</p>
+</div>
+
+<div class="card">
+  <h2>2 · Mix-up: token de OP-Evil</h2>
+  <a class="btn btn-bad" href="{{ mixup_url }}" target="_blank">Abrir el ataque del atacante &rarr;</a>
+  {% if variant == 'insecure' %}
+  <p class="muted">El atacante obtiene un id_token real de <strong>OP-Evil</strong> y lo inyecta en
+     este panel. Al no validar <code>iss</code>, el RP lo <strong>acepta</strong> → entra alguien que
+     no es de OP-Corp.</p>
+  {% else %}
+  <p class="muted">El RP valida <code>iss</code>: el token de OP-Evil es <strong>rechazado</strong>.</p>
+  {% endif %}
+</div>
+{% endblock %}

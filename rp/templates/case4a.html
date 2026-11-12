@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+{% block title %}Caso 4a — HS256 vs RS256{% endblock %}
+{% block body %}
+<h1>Caso 4a — Firma simétrica vs asimétrica</h1>
+<p class="rfc">{{ meta.rfc }}</p>
+<p>Dos providers, dos formas de firmar el <code>id_token</code>. Mismo usuario, mismo login.
+   Mirá el <code>alg</code> del header de cada uno.</p>
+
+{% for t in tokens %}
+  {% if t.error %}
+    <div class="card"><strong>{{ t.cid }}</strong>: error — {{ t.error }}</div>
+  {% else %}
+    <h2>{{ t.alg }} · <code>{{ t.cid }}</code></h2>
+    <p class="muted">{{ t.note }}</p>
+    {{ m.jwt_view(t.alg + " id_token", t.header, t.payload, raw=t.raw) }}
+  {% endif %}
+{% endfor %}
+
+<div class="card">
+  <h2>¿Por qué el secreto compartido es peor?</h2>
+  <ul>
+    <li><strong>HS256</strong>: la clave de firma <em>es</em> el <code>client_secret</code>, que el
+      RP también tiene. Cualquiera que lo conozca (cada cliente, o cualquiera que lo filtre)
+      puede <strong>fabricar</strong> tokens válidos.</li>
+    <li><strong>RS256</strong>: el OP firma con su clave <em>privada</em>; el RP verifica con la
+      <em>pública</em> (JWKS). El RP no puede firmar, así que un secreto filtrado del RP no alcanza
+      para falsificar tokens.</li>
+  </ul>
+  <p class="muted">Además, confiar en el <code>alg</code> del header para elegir cómo verificar
+    abre el Caso 4b.</p>
+</div>
+{% endblock %}

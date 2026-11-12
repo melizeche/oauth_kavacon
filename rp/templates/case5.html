@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Caso 5 — scopes ({{ variant }}){% endblock %}
+{% block body %}
+<style>
+  .kv { display: grid; grid-template-columns: max-content 1fr; gap: .35rem 1.1rem;
+        font-family: ui-monospace, Menlo, monospace; font-size: 1rem;
+        background: #11182711; border: 1px solid #8884; border-radius: 10px; padding: .9rem 1.1rem; }
+  @media (prefers-color-scheme: dark) { .kv { background: #0b1220; } }
+  .kv .k { color: #0891b2; font-weight: 700; text-align: right; white-space: nowrap; }
+  .kv .v { color: #b45309; font-weight: 600; word-break: break-all; }
+  @media (prefers-color-scheme: dark) { .kv .k { color: #38bdf8; } .kv .v { color: #fbbf24; } }
+  .kv .k.sens { color: #dc2626; } .kv .v.sens { color: #dc2626;
+        background: #dc262618; outline: 1px solid #dc2626; border-radius: 5px; padding: 0 .3em; }
+  .warn { border-left: 4px solid #dc2626; background: #dc262610; padding: .8rem 1.1rem;
+          border-radius: 8px; margin: 1rem 0; font-size: 1.05rem; }
+  .good { border-left: 4px solid #16a34a; background: #16a34a10; padding: .8rem 1.1rem;
+          border-radius: 8px; margin: 1rem 0; }
+</style>
+
+<h1>{{ meta.title.split('—')[0] }}— {{ variant }}</h1>
+<p>
+  {% if variant == 'insecure' %}<span class="tag tag-bad">VARIANTE INSEGURA</span>
+  {% else %}<span class="tag tag-ok">VARIANTE SEGURA</span>{% endif %}
+  &nbsp;<span class="rfc">{{ meta.rfc }}</span>
+</p>
+<p>El RP pidió: <code>scope = {{ requested }}</code>.
+  {% if variant == 'insecure' %}
+    Al omitir el parámetro <code>scope</code>, el OP aplica <strong>todos los configurados</strong>,
+    incluido el scope sensible de RRHH.
+  {% else %}
+    Scopes mínimos explícitos; además el provider no tiene configurado nada sensible.
+  {% endif %}
+</p>
+
+{% if leaked %}
+  <div class="warn">
+    ⚠ El token volvió con datos sensibles que el RP no necesitaba:
+    <strong>{{ leaked|join(', ') }}</strong>.
+  </div>
+{% else %}
+  <div class="good">El token trae solo lo mínimo. Ningún claim sensible.</div>
+{% endif %}
+
+<h2>Claims del id_token</h2>
+<div class="kv">
+  {% for k, v in payload.items() %}
+    {% set s = k in sensitive %}
+    <span class="k {{ 'sens' if s }}">{{ k }}</span><span class="v {{ 'sens' if s }}">{{ v }}</span>
+  {% endfor %}
+</div>
+
+<div class="card">
+  <h2>Mitigación</h2>
+  <p>El cliente pide <strong>scopes mínimos explícitos</strong> y el OP aplica una
+     <strong>policy de scope</strong> por aplicación (no configura scopes sensibles donde no
+     corresponden). Un request sin <code>scope</code> no debe traducirse en "dame todo".</p>
+</div>
+{% endblock %}
