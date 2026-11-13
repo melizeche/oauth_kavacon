@@ -58,7 +58,9 @@ entries:
     identifiers:
       slug: caso3-insecure
     attrs:
-      name: 'Caso 3 — sin state/nonce/PKCE (INSEGURO)'
+      name: 'Inseguro'
+      group: 'Caso 3 — state / nonce / PKCE'
+      meta_icon: 'http://localhost:8081/static/insecure.svg'
       slug: caso3-insecure
       provider: !KeyOf caso3-insecure-provider
 
@@ -92,6 +94,8 @@ entries:
     identifiers:
       slug: caso3-secure
     attrs:
-      name: 'Caso 3 — con state/nonce/PKCE (SEGURO)'
+      name: 'Seguro'
+      group: 'Caso 3 — state / nonce / PKCE'
+      meta_icon: 'http://localhost:8081/static/secure.svg'
       slug: caso3-secure
       provider: !KeyOf caso3-secure-provider

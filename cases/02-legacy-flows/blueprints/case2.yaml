@@ -48,7 +48,9 @@ entries:
     identifiers:
       slug: caso2-insecure
     attrs:
-      name: 'Caso 2 — flujos legacy (INSEGURO)'
+      name: 'Inseguro (implicit)'
+      group: 'Caso 2 — flujos legacy'
+      meta_icon: 'http://localhost:8081/static/insecure.svg'
       slug: caso2-insecure
       provider: !KeyOf caso2-insecure-provider
 
@@ -84,6 +86,8 @@ entries:
     identifiers:
       slug: caso2-secure
     attrs:
-      name: 'Caso 2 — solo authorization code (SEGURO)'
+      name: 'Seguro (code)'
+      group: 'Caso 2 — flujos legacy'
+      meta_icon: 'http://localhost:8081/static/secure.svg'
       slug: caso2-secure
       provider: !KeyOf caso2-secure-provider

@@ -46,7 +46,9 @@ entries:
     identifiers:
       slug: caso6-corp
     attrs:
-      name: 'Caso 6 — OP corporativo (legitimo)'
+      name: 'OP-Corp (legítimo)'
+      group: 'Caso 6 — mix-up / issuer'
+      meta_icon: 'http://localhost:8081/static/secure.svg'
       slug: caso6-corp
       provider: !KeyOf caso6-corp-provider
 
@@ -79,6 +81,8 @@ entries:
     identifiers:
       slug: caso6-evil
     attrs:
-      name: 'Caso 6 — OP del atacante'
+      name: 'OP-Evil (atacante)'
+      group: 'Caso 6 — mix-up / issuer'
+      meta_icon: 'http://localhost:8081/static/insecure.svg'
       slug: caso6-evil
       provider: !KeyOf caso6-evil-provider

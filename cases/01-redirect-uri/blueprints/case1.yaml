@@ -47,7 +47,9 @@ entries:
     identifiers:
       slug: caso1-insecure
     attrs:
-      name: 'Caso 1 — redirect_uri laxa (INSEGURO)'
+      name: 'Inseguro (regex)'
+      group: 'Caso 1 — redirect_uri laxa'
+      meta_icon: 'http://localhost:8081/static/insecure.svg'
       slug: caso1-insecure
       provider: !KeyOf caso1-insecure-provider
 
@@ -83,6 +85,8 @@ entries:
     identifiers:
       slug: caso1-secure
     attrs:
-      name: 'Caso 1 — redirect_uri estricta (SEGURO)'
+      name: 'Seguro (strict)'
+      group: 'Caso 1 — redirect_uri laxa'
+      meta_icon: 'http://localhost:8081/static/secure.svg'
       slug: caso1-secure
       provider: !KeyOf caso1-secure-provider

@@ -44,7 +44,9 @@ entries:
     identifiers:
       slug: caso4a-hs256
     attrs:
-      name: 'Caso 4a — firma simetrica HS256'
+      name: 'HS256 (sin signing_key)'
+      group: 'Caso 4 — firma y confusión de alg'
+      meta_icon: 'http://localhost:8081/static/insecure.svg'
       slug: caso4a-hs256
       provider: !KeyOf caso4a-hs256-provider
 
@@ -78,7 +80,9 @@ entries:
     identifiers:
       slug: caso4a-rs256
     attrs:
-      name: 'Caso 4a — firma asimetrica RS256'
+      name: 'RS256 (con signing_key)'
+      group: 'Caso 4 — firma y confusión de alg'
+      meta_icon: 'http://localhost:8081/static/secure.svg'
       slug: caso4a-rs256
       provider: !KeyOf caso4a-rs256-provider
 
@@ -112,6 +116,8 @@ entries:
     identifiers:
       slug: caso4b
     attrs:
-      name: 'Caso 4b — confusion de algoritmo'
+      name: 'RS256 + JWKS (confusión)'
+      group: 'Caso 4 — firma y confusión de alg'
+      meta_icon: 'http://localhost:8081/static/insecure.svg'
       slug: caso4b
       provider: !KeyOf caso4b-provider

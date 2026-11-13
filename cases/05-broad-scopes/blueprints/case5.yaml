@@ -63,7 +63,9 @@ entries:
     identifiers:
       slug: caso5-insecure
     attrs:
-      name: 'Caso 5 — scopes amplios (INSEGURO)'
+      name: 'Inseguro (scope sensible)'
+      group: 'Caso 5 — scopes'
+      meta_icon: 'http://localhost:8081/static/insecure.svg'
       slug: caso5-insecure
       provider: !KeyOf caso5-insecure-provider
 
@@ -96,6 +98,8 @@ entries:
     identifiers:
       slug: caso5-secure
     attrs:
-      name: 'Caso 5 — scopes minimos (SEGURO)'
+      name: 'Seguro (mínimo)'
+      group: 'Caso 5 — scopes'
+      meta_icon: 'http://localhost:8081/static/secure.svg'
       slug: caso5-secure
       provider: !KeyOf caso5-secure-provider
