@@ -1,0 +1,46 @@
+# =============================================================================
+#  Override del MODO DOMINIO (opcional) — solo afecta al Caso 1.
+#
+#  Uso:
+#     make hosts        # agrega op.lab.test / rp.lab.test / rp-lab.test a /etc/hosts (sudo)
+#     make up-domain    # levanta el stack + proxy Caddy en :80, Caso 1 con dominios
+#
+#  El modo puerto (make up) sigue siendo el default y NO necesita /etc/hosts.
+#  Cambiar de modo requiere estado limpio: `make reset` antes de cambiar, porque
+#  authentik no re-aplica el blueprint si el archivo no cambió (solo cambió la env).
+#
+#  En modo dominio, el Caso 1 vive bajo dominios .test servidos por Caddy en :80:
+#     RP legítimo : http://rp.lab.test/callback
+#     atacante    : http://rp-lab.test/callback   (el look-alike)
+#  La regex insegura http://rp.lab.test/callback (puntos SIN escapar) matchea
+#  rp-lab.test: el primer "." matchea el "-". El resto del lab sigue en localhost.
+# =============================================================================
+services:
+  server:
+    environment:
+      CASO1_INSECURE_REGEX: 'http://rp.lab.test/callback'
+      CASO1_LEGIT_REDIRECT: 'http://rp.lab.test/callback'
+  worker:
+    environment:
+      CASO1_INSECURE_REGEX: 'http://rp.lab.test/callback'
+      CASO1_LEGIT_REDIRECT: 'http://rp.lab.test/callback'
+  rp:
+    environment:
+      CASO1_OP_BROWSER: 'http://op.lab.test'
+      CASO1_LEGIT_REDIRECT: 'http://rp.lab.test/callback'
+      CASO1_ATTACKER_CALLBACK: 'http://rp-lab.test/callback'
+      CASO1_INSECURE_REGEX: 'http://rp.lab.test/callback'
+
+  proxy:
+    image: caddy:2.8.4-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./proxy/Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - server
+      - rp
+      - attacker
+    networks:
+      - lab

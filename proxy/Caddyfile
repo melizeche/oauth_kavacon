@@ -1,0 +1,16 @@
+# Proxy del MODO DOMINIO (Caso 1). Rutea por Host en :80 a cada contenedor.
+# Solo se usa con el override docker-compose.domain.yml. El modo puerto (default)
+# no lo necesita. Los nombres .test deben estar en /etc/hosts -> 127.0.0.1
+# (make hosts). El prefijo http:// desactiva el TLS automatico de Caddy.
+
+http://op.lab.test {
+	reverse_proxy server:9000
+}
+
+http://rp.lab.test {
+	reverse_proxy rp:8081
+}
+
+http://rp-lab.test {
+	reverse_proxy attacker:8082
+}
