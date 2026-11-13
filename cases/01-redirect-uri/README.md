@@ -50,7 +50,7 @@ make case1          # abre http://localhost:8081/caso1/insecure
 ```
 
 1. Asegurate de tener sesión de **víctima** en el OP (abrí `http://localhost:9000` y logueate
-   con `victima` / `Kavacon2026!`). Así el clic del atacante no pide login y el robo es directo.
+   con `victima` / `12345`). Así el clic del atacante no pide login y el robo es directo.
 2. En `http://localhost:8081/caso1/insecure`, hacé clic en **"Seguir el link del atacante →"**.
 3. Mirá el servidor del atacante en `http://localhost:8082/`: el `code` quedó capturado ahí.
 4. Repetí en `http://localhost:8081/caso1/secure`: el mismo intento ahora falla, el OP
@@ -63,6 +63,21 @@ make case1          # abre http://localhost:8081/caso1/insecure
 - El `code` es de un solo uso y este cliente es confidencial (hace falta el `client_secret`
   para canjearlo), pero **que el `code` llegue al atacante ya es la falla**: el canal de
   redirección nunca debió entregarlo a una URI no registrada.
+
+## Modo dominio (opcional)
+
+Por defecto el atacante es otro **puerto** de `localhost` (`:8082`), que la regex con el punto sin
+escapar matchea. Si querés mostrarlo con **dominios** (un look-alike como en los slides), hay un
+modo opt-in con proxy Caddy:
+
+```bash
+make hosts && make up-domain
+```
+
+Entonces el RP legítimo es `http://rp.lab.test/callback` y el atacante `http://rp-lab.test/callback`;
+la regex `http://rp.lab.test/callback` (puntos sin escapar) matchea el look-alike porque el primer
+`.` matchea el `-`. El `redirect_uri` del blueprint sale de las variables `CASO1_INSECURE_REGEX` /
+`CASO1_LEGIT_REDIRECT` (tag `!Env`), con default = modo puerto. Ver el README raíz.
 
 ## Reset
 

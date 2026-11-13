@@ -34,16 +34,15 @@
   <div class="cfg insecure {{ 'active' if variant == 'insecure' }}">
     <div class="mode">matching_mode: regex</div>
     <h3>🔴 caso1-insecure</h3>
-    <div class="uri">http://localhost:808<span class="bad-dot" title="punto sin escapar: matchea cualquier caracter">.</span>\/callback</div>
-    <p class="note">El punto <strong>sin escapar</strong> matchea cualquier carácter.
-      <code>808.</code> matchea <code>8081</code> (el RP) <strong>y</strong> <code>8082</code> (el atacante).</p>
+    <div class="uri">{% set parts = regex_url.split('.') %}{% for p in parts %}{{ p }}{% if not loop.last %}<span class="bad-dot" title="punto sin escapar: matchea cualquier caracter">.</span>{% endif %}{% endfor %}</div>
+    <p class="note">El punto <strong>sin escapar</strong> matchea cualquier carácter. {{ match_note }}</p>
   </div>
   <div class="cfg secure {{ 'active' if variant == 'secure' }}">
     <div class="mode">matching_mode: strict</div>
     <h3>🟢 caso1-secure</h3>
-    <div class="uri">http://localhost:8081<span class="ok-dot">/</span>callback</div>
+    <div class="uri">{{ redirect_uri_legit }}</div>
     <p class="note">Comparación de string <strong>exacta</strong>. Solo matchea la URL literal
-      del RP. El intento hacia <code>8082</code> se rechaza.</p>
+      del RP (<code>{{ redirect_uri_legit }}</code>). El intento del atacante se rechaza.</p>
   </div>
 </div>
 
@@ -51,14 +50,14 @@
   <h2>1 · Login legítimo</h2>
   <p>El RP legítimo usa <code>redirect_uri = {{ redirect_uri_legit }}</code>.</p>
   <a class="btn btn-plain" href="{{ login_url }}">Login como la víctima</a>
-  <p class="muted">Usuario <code>victima</code> / <code>Kavacon2026!</code></p>
+  <p class="muted">Usuario <code>victima</code> / <code>12345</code></p>
 </div>
 
 <div class="card">
   <h2>2 · El link que enviaría un atacante</h2>
   <p>
     Mismo <code>client_id</code>, pero con
-    <code>redirect_uri = {{ attacker_redirect }}</code> (el servidor del atacante, puerto 8082).
+    <code>redirect_uri = {{ attacker_redirect }}</code> (el servidor del atacante).
     La víctima ya tiene sesión en el OP, hace clic, y el OP decide a dónde mandar el <code>code</code>
     según cómo valide el <code>redirect_uri</code>.
   </p>
@@ -67,12 +66,12 @@
   {% if variant == 'insecure' %}
   <p class="muted">
     El OP acepta la <code>redirect_uri</code> del atacante y le entrega el <code>code</code>.
-    Mirá su captura en vivo en <a href="http://localhost:8082/" target="_blank">http://localhost:8082/</a>.
+    Mirá su captura en vivo en <a href="{{ attacker_home }}" target="_blank">{{ attacker_home }}</a>.
   </p>
   {% else %}
   <p class="muted">
     El OP valida con <code>strict</code> contra <code>{{ redirect_uri_legit }}</code>.
-    El intento hacia <code>8082</code> es rechazado con un error de <code>redirect_uri</code>.
+    El intento del atacante es rechazado con un error de <code>redirect_uri</code>.
   </p>
   {% endif %}
 </div>

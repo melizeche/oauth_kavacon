@@ -29,7 +29,9 @@ entries:
         - authorization_code
         - refresh_token
       redirect_uris:
-        - url: 'http://localhost:808.\/callback'
+        # Modo puerto (default): "808." con el punto sin escapar matchea :8082.
+        # Modo dominio (CASO1_INSECURE_REGEX): matchea rp-lab.test. Ver README.
+        - url: !Env [CASO1_INSECURE_REGEX, 'http://localhost:808.\/callback']
           matching_mode: regex
       sub_mode: hashed_user_id
       include_claims_in_id_token: true
@@ -65,7 +67,7 @@ entries:
         - authorization_code
         - refresh_token
       redirect_uris:
-        - url: 'http://localhost:8081/callback'
+        - url: !Env [CASO1_LEGIT_REDIRECT, 'http://localhost:8081/callback']
           matching_mode: strict
       sub_mode: hashed_user_id
       include_claims_in_id_token: true

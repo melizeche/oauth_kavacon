@@ -29,6 +29,6 @@ entries:
       email: victima@lab.local
       is_active: true
       path: users
-      password: Kavacon2026!
+      password: 12345
       groups:
         - !KeyOf group-empleados

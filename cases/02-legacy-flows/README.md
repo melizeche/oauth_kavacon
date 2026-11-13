@@ -52,7 +52,7 @@ El RP usa `response_type=code` + PKCE. El token se canjea en `/callback` server-
 make case2          # abre http://localhost:8081/caso2/insecure
 ```
 
-1. Tené sesión de **víctima** en el OP (`http://localhost:9000`, `victima` / `Kavacon2026!`).
+1. Tené sesión de **víctima** en el OP (`http://localhost:9000`, `victima` / `12345`).
 2. En `http://localhost:8081/caso2/insecure`, **"Login como la víctima (implicit)"**.
 3. En el callback, mirá la **barra de direcciones**: el token está en el `#fragment`.
 4. Abrí `http://localhost:8082/`: el `access_token` quedó capturado (lo robó `steal.js`).

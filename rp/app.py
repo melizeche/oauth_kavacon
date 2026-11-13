@@ -35,6 +35,14 @@ OP_INTERNAL_URL = os.environ.get("OP_INTERNAL_URL", "http://localhost:9000").rst
 RP_BASE_URL = os.environ.get("RP_BASE_URL", "http://localhost:8081").rstrip("/")
 ATTACKER_URL = os.environ.get("ATTACKER_URL", "http://localhost:8082").rstrip("/")
 
+# Caso 1: URLs visibles para el navegador. En modo puerto (default) son
+# localhost con puertos; en modo dominio las fija el override de compose.
+# El resto del lab no cambia.
+CASO1_OP_BROWSER = os.environ.get("CASO1_OP_BROWSER", OP_BROWSER_URL).rstrip("/")
+CASO1_LEGIT_REDIRECT = os.environ.get("CASO1_LEGIT_REDIRECT", f"{RP_BASE_URL}/callback")
+CASO1_ATTACKER_CALLBACK = os.environ.get("CASO1_ATTACKER_CALLBACK", f"{ATTACKER_URL}/callback")
+CASO1_INSECURE_REGEX = os.environ.get("CASO1_INSECURE_REGEX", r"http://localhost:808.\/callback")
+
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-insecure")
 
@@ -139,7 +147,7 @@ CASE_META = {
     },
 }
 
-VICTIMA_PASSWORD = "Kavacon2026!"
+VICTIMA_PASSWORD = "12345"
 
 
 # ---------------------------------------------------------------------------
@@ -171,7 +179,8 @@ def pkce_pair():
     return verifier, challenge
 
 
-def build_authorize_url(cfg, redirect_uri, state=None, nonce=None, code_challenge=None):
+def build_authorize_url(cfg, redirect_uri, state=None, nonce=None, code_challenge=None,
+                        op_browser_base=None):
     params = {
         "client_id": cfg["client_id"],
         "response_type": cfg["response_type"],
@@ -185,7 +194,8 @@ def build_authorize_url(cfg, redirect_uri, state=None, nonce=None, code_challeng
     if code_challenge:
         params["code_challenge"] = code_challenge
         params["code_challenge_method"] = "S256"
-    return op_authorize_browser() + "?" + urllib.parse.urlencode(params)
+    base = (op_browser_base or OP_BROWSER_URL).rstrip("/")
+    return f"{base}/application/o/authorize/?" + urllib.parse.urlencode(params)
 
 
 def redeem_code(client_id, client_secret, code, redirect_uri, code_verifier=None):
@@ -358,18 +368,30 @@ def case_page(variant):
     login_url = url_for("login", case_name=case_name, variant=variant)
 
     if case_name == "caso1":
-        attacker_redirect = f"{ATTACKER_URL}/callback"
+        attacker_redirect = CASO1_ATTACKER_CALLBACK
         attacker_link = build_authorize_url(
-            cfg, attacker_redirect, state="estado-victima-123", nonce="n-victima"
+            cfg, attacker_redirect, state="estado-victima-123", nonce="n-victima",
+            op_browser_base=CASO1_OP_BROWSER,
+        )
+        legit_host = urllib.parse.urlparse(CASO1_LEGIT_REDIRECT).netloc
+        evil_host = urllib.parse.urlparse(attacker_redirect).netloc
+        p = urllib.parse.urlparse(attacker_redirect)
+        attacker_home = f"{p.scheme}://{p.netloc}/"
+        match_note = (
+            f"El punto sin escapar matchea cualquier carácter: la regex pensada para "
+            f"{legit_host} también matchea {evil_host} (el atacante)."
         )
         return render_template(
             "case1.html",
             variant=variant,
             meta=meta,
             login_url=login_url,
-            redirect_uri_legit=f"{RP_BASE_URL}/callback",
+            redirect_uri_legit=CASO1_LEGIT_REDIRECT,
             attacker_redirect=attacker_redirect,
             attacker_link=attacker_link,
+            regex_url=CASO1_INSECURE_REGEX,
+            match_note=match_note,
+            attacker_home=attacker_home,
         )
 
     return render_template(
@@ -393,7 +415,13 @@ def login(case_name, variant):
         return "Caso o variante desconocida", 404
     state = secrets.token_urlsafe(16) if cfg["use_state"] else None
     nonce = secrets.token_urlsafe(16) if cfg["use_nonce"] else None
-    redirect_uri = f"{RP_BASE_URL}{cfg['redirect_path']}"
+    # Caso 1 usa URLs configurables (puerto o dominio); el resto, localhost.
+    if case_name == "caso1":
+        redirect_uri = CASO1_LEGIT_REDIRECT
+        op_base = CASO1_OP_BROWSER
+    else:
+        redirect_uri = f"{RP_BASE_URL}{cfg['redirect_path']}"
+        op_base = None
     session["oauth"] = {
         "case": case_name,
         "variant": variant,
@@ -401,7 +429,8 @@ def login(case_name, variant):
         "nonce": nonce,
         "redirect_uri": redirect_uri,
     }
-    return redirect(build_authorize_url(cfg, redirect_uri, state=state, nonce=nonce))
+    return redirect(build_authorize_url(cfg, redirect_uri, state=state, nonce=nonce,
+                                        op_browser_base=op_base))
 
 
 @app.route("/callback")

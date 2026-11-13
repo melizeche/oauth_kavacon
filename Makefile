@@ -2,7 +2,10 @@ RP := http://localhost:8081
 OP := http://localhost:9000
 ATTACKER := http://localhost:8082
 
-.PHONY: help up down logs ps reset verify-victim \
+DOMAIN_FILES := -f docker-compose.yml -f docker-compose.domain.yml
+HOSTS := op.lab.test rp.lab.test rp-lab.test
+
+.PHONY: help up down logs ps reset verify-victim up-domain down-domain hosts unhosts \
         case1 reset-case1 case2 reset-case2 case3 reset-case3 case4 reset-case4 \
         case5 reset-case5 case6 reset-case6
 
@@ -15,6 +18,12 @@ help:
 	@echo "  make ps            Estado de los contenedores"
 	@echo "  make reset         Apaga y BORRA ./data (reinicio total del OP)"
 	@echo "  make verify-victim Verifica que el OP responde y el blueprint cargo"
+	@echo ""
+	@echo "  -- Modo DOMINIO (opcional, solo Caso 1; default es por puerto) --"
+	@echo "  make hosts         Agrega los dominios .test a /etc/hosts (sudo)"
+	@echo "  make up-domain     Levanta el stack + proxy, Caso 1 con dominios"
+	@echo "  make down-domain   Apaga el stack del modo dominio"
+	@echo "  make unhosts       Quita los dominios .test de /etc/hosts (sudo)"
 	@echo ""
 	@echo "  make case1         Imprime/abre la URL de la variante insegura del Caso 1"
 	@echo "  make reset-case1   Limpia capturas del atacante y sesion del RP"
@@ -38,6 +47,28 @@ up:
 
 down:
 	docker compose down
+
+# --- Modo dominio (opcional, solo Caso 1) ---
+hosts:
+	@grep -q 'rp.lab.test' /etc/hosts || echo '127.0.0.1 $(HOSTS)' | sudo tee -a /etc/hosts >/dev/null
+	@echo "Entradas en /etc/hosts: $(HOSTS) -> 127.0.0.1"
+
+unhosts:
+	@sudo sed -i '' '/[[:space:]]op\.lab\.test[[:space:]]rp\.lab\.test[[:space:]]rp-lab\.test/d' /etc/hosts
+	@echo "Entradas .test removidas de /etc/hosts"
+
+up-domain:
+	@test -f .env || (echo 'Falta .env — copia .env.example a .env primero'; exit 1)
+	@grep -q 'rp.lab.test' /etc/hosts || (echo 'Falta /etc/hosts: corre  make hosts  primero'; exit 1)
+	docker compose $(DOMAIN_FILES) up -d --build
+	@echo "MODO DOMINIO. Caso 1:"
+	@echo "  INSEGURO: http://rp.lab.test/caso1/insecure"
+	@echo "  SEGURO:   http://rp.lab.test/caso1/secure"
+	@echo "  Atacante: http://rp-lab.test/"
+	@echo "  OP:       http://op.lab.test/   | resto del lab: localhost (ver make case2..6)"
+
+down-domain:
+	docker compose $(DOMAIN_FILES) down
 
 logs:
 	docker compose logs -f
